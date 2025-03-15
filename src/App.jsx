@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import apimock from './apimock';
+import apimock from './apimock'; // Para usar datos simulados
+import apiclient from './apiclient'; // Para usar datos reales
 import Titulo from "./components/Titulo";
 import FindAuthor from "./components/FindAuthor";
 import Table from "./components/Table";
@@ -7,6 +8,9 @@ import Points from "./components/Points";
 import Canvas from "./components/Canvas";
 
 function App() {
+
+    // Aqui decidimos si usar apimock o apiclient
+    const api = apiclient; // apimock o apiclient
     // Estado para manejar el autor seleccionado
     const [author, setAuthor] = useState("");
     // Estado para manejar la lista de planos del autor
@@ -19,9 +23,7 @@ function App() {
     // Función para obtener los planos del autor
     const fetchBlueprints = async () => {
         try {
-            // Aquí iría la llamada a la API o al mock
-            // Ejemplo: apimock.getBlueprintsByAuthor(author, (data) => { ... });
-            apimock.getBlueprintsByAuthor(author, (data) => {
+            api.getBlueprintsByAuthor(author, (data) => {
                 setBlueprints(data);
                 calculateTotalPoints(data);
             });
@@ -37,16 +39,16 @@ function App() {
     };
 
     return (
-        <div className="gobla">
+        <div className="container mt-4">
             <Titulo />
-            <FindAuthor author={author} setAuthor={setAuthor} fetchBlueprints={fetchBlueprints} />
-            <div className="Blueprint">
-                <div className="info">
-                    <Table blueprints={blueprints} setSelectedBlueprint={setSelectedBlueprint} />
-                    <Points totalPoints={totalPoints} />
+            <div className="row">
+                <div className="col-md-6">
+                    <FindAuthor author={author} setAuthor={setAuthor} fetchBlueprints={fetchBlueprints}/>
+                    <Table blueprints={blueprints} setSelectedBlueprint={setSelectedBlueprint}/>
+                    <Points totalPoints={totalPoints}/>
                 </div>
-                <div className="blueprint-display">
-                    <Canvas selectedBlueprint={selectedBlueprint} />
+                <div className="col-md-6">
+                <Canvas selectedBlueprint={selectedBlueprint} />
                 </div>
             </div>
         </div>

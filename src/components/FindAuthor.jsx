@@ -2,15 +2,20 @@ import PropTypes from 'prop-types';
 
 function FindAuthor({ author, setAuthor, fetchBlueprints }) {
     return (
-        <div>
-            <label htmlFor="author">Author</label>
-            <input
-                type="text"
-                id="author"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-            />
-            <button onClick={fetchBlueprints}>Get blueprints</button>
+        <div className="mb-4">
+            <label htmlFor="author" className="form-label">Author</label>
+            <div className="input-group">
+                <input
+                    type="text"
+                    id="author"
+                    className="form-control"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                />
+                <button className="btn btn-primary" onClick={fetchBlueprints}>
+                    Get blueprints
+                </button>
+            </div>
         </div>
     );
 }

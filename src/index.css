@@ -28,12 +28,12 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  padding: auto;
-  
+  padding: 20px; /* Añadido padding para mejor espaciado */
 }
+
 .Blueprint {
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: flex-start;
   width: 95vw;
   height: 75vh;
@@ -41,47 +41,51 @@ body {
 }
 
 .info, .blueprint-display {
-  flex: 1; 
+  flex: 1;
 }
-
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
 
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-}
 .container {
   max-width: 800px;
   margin: auto;
 }
+
 input, button {
   padding: 8px;
   margin: 5px;
 }
+
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
+
 th, td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
 }
+
 th {
   background-color: #f4f4f4;
 }
+
 .blueprint-display {
   margin-top: 20px;
 }
+
 .blueprint-box {
-  width: 300px;
-  height: 300px;
-  border: 1px solid black;
+  width: 600px; /* Ajustado al tamaño del Canvas */
+  height: 600px; /* Ajustado al tamaño del Canvas */
+  background-color: #f8f9fa; /* Fondo gris claro */
+  border: 1px solid #dee2e6; /* Borde para visualizar el Canvas */
+  border-radius: 0.25rem;
+  padding: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -98,9 +102,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;

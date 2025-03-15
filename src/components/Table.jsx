@@ -2,9 +2,9 @@ import PropTypes from 'prop-types';
 
 function Table({ blueprints, setSelectedBlueprint }) {
     return (
-        <div>
+        <div className="mb-4">
             <p><strong>Blueprints:</strong></p>
-            <table>
+            <table className="table table-striped">
                 <thead>
                 <tr>
                     <th>Blueprint name</th>
@@ -18,7 +18,12 @@ function Table({ blueprints, setSelectedBlueprint }) {
                         <td>{blueprint.name}</td>
                         <td>{blueprint.points.length}</td>
                         <td>
-                            <button onClick={() => setSelectedBlueprint(blueprint)}>Open</button>
+                            <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => setSelectedBlueprint(blueprint)}
+                            >
+                                Open
+                            </button>
                         </td>
                     </tr>
                 ))}
