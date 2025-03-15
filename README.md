@@ -17,7 +17,35 @@ Antes de ejecutar este proyecto, asegúrate de tener instalado lo siguiente:
 
 Sigue estos pasos para configurar y ejecutar el proyecto en tu máquina local:
 
-1. **Clona el repositorio**:
+### Pasos para Ejecutar el Backend:
+
+1. **Clona el repositorio del backend**:
+   ```bash
+   git clone https://github.com/Mar972310/SpringBoot_REST_API_Blueprints_Part2.git
+----
+
+1. **Navega a la Carpeta del Backend:**
+   Abre una terminal y navega a la carpeta donde se encuentra el proyecto Spring Boot.
+   ```bash
+   cd SpringBoot_REST_API_Blueprints_Part2
+   mvn clean package
+   ```
+
+2. **Compilar y Ejecutar el Backend:**
+   Usa Maven para compilar y ejecutar el backend.
+   ```bash
+   mvn spring-boot:run
+   ```
+   Esto iniciará el servidor backend en `http://localhost:8080`.
+
+3. **Verificar que el Backend Esté Funcionando:**
+   Abre tu navegador o usa una herramienta como **Postman** para verificar que el backend esté funcionando correctamente. Por ejemplo, puedes probar el siguiente endpoint:
+   ```bash
+   http://localhost:8080/blueprints/john
+   ```
+   Esto debería devolver los planos del autor `john` en formato JSON.
+
+1. **Clona el repositorio frontend**:
    ```bash
    git clone https://github.com/Mar972310/ARSW_LAB6.git
    cd ARSW_LAB6
