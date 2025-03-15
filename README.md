@@ -41,9 +41,9 @@ Sigue estos pasos para configurar y ejecutar el proyecto en tu máquina local:
 3. **Verificar que el Backend Esté Funcionando:**
    Abre tu navegador o usa una herramienta como **Postman** para verificar que el backend esté funcionando correctamente. Por ejemplo, puedes probar el siguiente endpoint:
    ```bash
-   http://localhost:8080/blueprints/john
+   http://localhost:8080/blueprints
    ```
-   Esto debería devolver los planos del autor `john` en formato JSON.
+   Esto debería devolver los planos de los actores en formato JSON.
 
 1. **Clona el repositorio frontend**:
    ```bash
