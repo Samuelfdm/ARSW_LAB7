@@ -1,11 +1,56 @@
 import { useEffect, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
+import { Client } from '@stomp/stompjs';
 
-function Canvas({ selectedBlueprint, setSelectedBlueprint }) {
+function Canvas() {
     const canvasRef = useRef(null);
-    const [isDrawing, setIsDrawing] = useState(false);
+    const stompClientRef = useRef(null);
+    const [blueprint, setBlueprint] = useState({ name: 'default', points: [] });
 
-    // Función para dibujar el blueprint
+    useEffect(() => {
+        const stompClient = new Client({
+            brokerURL: 'ws://localhost:8080/ws',
+            reconnectDelay: 5000,
+            onConnect: () => {
+                console.log('Connected to WebSocket');
+
+                // 🔹 Solicitar el blueprint actual
+                stompClient.publish({
+                    destination: '/app/get-blueprint',
+                    body: JSON.stringify({ blueprintId: 'default' })
+                });
+
+                // 🔹 Suscribirse a cambios completos del blueprint
+                stompClient.subscribe('/topic/blueprints', (message) => {
+                    const updatedBlueprint = JSON.parse(message.body);
+                    console.log('📩 Blueprint actualizado:', updatedBlueprint);
+                    setBlueprint(updatedBlueprint);
+                });
+
+                // 🔹 Suscribirse a nuevos puntos en tiempo real
+                stompClient.subscribe('/topic/newpoint', (message) => {
+                    const newPoint = JSON.parse(message.body);
+                    console.log('🎯 Nuevo punto recibido:', newPoint);
+
+                    // Agregar punto recibido al blueprint y redibujar
+                    setBlueprint((prev) => ({
+                        ...prev,
+                        points: [...prev.points, newPoint]
+                    }));
+                });
+            },
+            onStompError: (error) => console.error('⚠️ STOMP Error:', error),
+        });
+
+        stompClient.activate();
+        stompClientRef.current = stompClient;
+
+        return () => stompClient.deactivate();
+    }, []);
+
+    useEffect(() => {
+        drawBlueprint();
+    }, [blueprint]);
+
     const drawBlueprint = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -13,124 +58,60 @@ function Canvas({ selectedBlueprint, setSelectedBlueprint }) {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (!selectedBlueprint || !selectedBlueprint.points) return;
-
-        // Configuración del estilo de dibujo
         ctx.strokeStyle = 'blue';
         ctx.lineWidth = 2;
         ctx.fillStyle = 'blue';
 
-        // Dibujar puntos y líneas
-        selectedBlueprint.points.forEach((point, index) => {
+        blueprint.points.forEach((point, index) => {
             // Dibujar el punto
             ctx.beginPath();
             ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
             ctx.fill();
 
-            // Dibujar línea al punto anterior si existe
+            // Dibujar líneas entre los puntos
             if (index > 0) {
                 ctx.beginPath();
-                ctx.moveTo(selectedBlueprint.points[index - 1].x, selectedBlueprint.points[index - 1].y);
+                ctx.moveTo(blueprint.points[index - 1].x, blueprint.points[index - 1].y);
                 ctx.lineTo(point.x, point.y);
                 ctx.stroke();
             }
         });
     };
 
-    // Efecto para dibujar cuando cambia el blueprint seleccionado
-    useEffect(() => {
-        drawBlueprint();
-    }, [selectedBlueprint]);
-
-    // Efecto para manejar los eventos de puntero
-    useEffect(() => {
+    const handlePointerDown = (e) => {
         const canvas = canvasRef.current;
-        if (!canvas || !selectedBlueprint) return;
+        if (!canvas) return;
 
-        const handlePointerDown = (e) => {
-            const canvas = canvasRef.current;
-            if (!canvas || !selectedBlueprint) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const newPoint = { x, y };
+        setBlueprint((prev) => ({
+            ...prev,
+            points: [...prev.points, newPoint]
+        }));
 
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            // Crear COPIA profunda del array de puntos
-            const newPoints = JSON.parse(JSON.stringify(selectedBlueprint.points));
-            newPoints.push({ x, y });
-
-            setSelectedBlueprint({
-                ...selectedBlueprint,
-                points: newPoints
+        // Enviar punto al servidor
+        if (stompClientRef.current?.connected) {
+            stompClientRef.current.publish({
+                destination: '/app/newpoint',
+                body: JSON.stringify(newPoint),
             });
-        };
-
-        const handlePointerUp = () => {
-            setIsDrawing(false);
-        };
-
-        const handlePointerMove = (e) => {
-            if (!isDrawing) return;
-
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            // Agregar el nuevo punto al blueprint
-            const updatedBlueprint = {
-                ...selectedBlueprint,
-                points: [...selectedBlueprint.points, { x, y }]
-            };
-
-            setSelectedBlueprint(updatedBlueprint);
-        };
-
-        // Agregar event listeners
-        canvas.addEventListener('pointerdown', handlePointerDown);
-        canvas.addEventListener('pointerup', handlePointerUp);
-        canvas.addEventListener('pointerout', handlePointerUp); // Para cuando el puntero sale del canvas
-        canvas.addEventListener('pointermove', handlePointerMove);
-
-        // Limpieza al desmontar el componente
-        return () => {
-            canvas.removeEventListener('pointerdown', handlePointerDown);
-            canvas.removeEventListener('pointerup', handlePointerUp);
-            canvas.removeEventListener('pointerout', handlePointerUp);
-            canvas.removeEventListener('pointermove', handlePointerMove);
-        };
-    }, [selectedBlueprint, isDrawing, setSelectedBlueprint]);
+        }
+    };
 
     return (
         <div>
-            <h3>
-                Current blueprint: <span id="current-blueprint">
-                    {selectedBlueprint ? selectedBlueprint.name : '----'}
-                </span>
-            </h3>
-            <div className="blueprint-box">
-                <canvas
-                    ref={canvasRef}
-                    id="blueprint-canvas"
-                    width="600"
-                    height="600"
-                    style={{ touchAction: 'none' }} // Importante para dispositivos táctiles
-                ></canvas>
-            </div>
+            <h3>Blueprint: {blueprint.name}</h3>
+            <canvas
+                ref={canvasRef}
+                width="600"
+                height="600"
+                style={{ border: '1px solid black', touchAction: 'none' }}
+                onPointerDown={handlePointerDown}
+            ></canvas>
         </div>
     );
 }
-
-Canvas.propTypes = {
-    selectedBlueprint: PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        points: PropTypes.arrayOf(
-            PropTypes.shape({
-                x: PropTypes.number.isRequired,
-                y: PropTypes.number.isRequired
-            })
-        ).isRequired
-    }),
-    setSelectedBlueprint: PropTypes.func.isRequired
-};
 
 export default Canvas;
