@@ -1,43 +1,120 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-function Canvas({ selectedBlueprint }) {
-    useEffect(() => {
-        if (selectedBlueprint) {
-            const canvas = document.getElementById('blueprint-canvas');
-            const ctx = canvas.getContext('2d');
+function Canvas({ selectedBlueprint, setSelectedBlueprint }) {
+    const canvasRef = useRef(null);
+    const [isDrawing, setIsDrawing] = useState(false);
 
-            // Limpiar el Canvas antes de dibujar
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Función para dibujar el blueprint
+    const drawBlueprint = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
 
-            // Obtener las coordenadas de los puntos
-            const points = selectedBlueprint.points;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Si no hay puntos, no dibujar nada
-            if (points.length === 0) return;
+        if (!selectedBlueprint || !selectedBlueprint.points) return;
 
-            // Dibujar los segmentos de recta
+        // Configuración del estilo de dibujo
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = 'blue';
+
+        // Dibujar puntos y líneas
+        selectedBlueprint.points.forEach((point, index) => {
+            // Dibujar el punto
             ctx.beginPath();
-            points.forEach((point, index) => {
-                if (index === 0) {
-                    ctx.moveTo(point.x, point.y); // Mover al primer punto
-                } else {
-                    ctx.lineTo(point.x, point.y); // Dibujar línea al siguiente punto
-                }
-            });
-            ctx.stroke(); // Renderizar las líneas
-        }
+            ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Dibujar línea al punto anterior si existe
+            if (index > 0) {
+                ctx.beginPath();
+                ctx.moveTo(selectedBlueprint.points[index - 1].x, selectedBlueprint.points[index - 1].y);
+                ctx.lineTo(point.x, point.y);
+                ctx.stroke();
+            }
+        });
+    };
+
+    // Efecto para dibujar cuando cambia el blueprint seleccionado
+    useEffect(() => {
+        drawBlueprint();
     }, [selectedBlueprint]);
+
+    // Efecto para manejar los eventos de puntero
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas || !selectedBlueprint) return;
+
+        const handlePointerDown = (e) => {
+            const canvas = canvasRef.current;
+            if (!canvas || !selectedBlueprint) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Crear COPIA profunda del array de puntos
+            const newPoints = JSON.parse(JSON.stringify(selectedBlueprint.points));
+            newPoints.push({ x, y });
+
+            setSelectedBlueprint({
+                ...selectedBlueprint,
+                points: newPoints
+            });
+        };
+
+        const handlePointerUp = () => {
+            setIsDrawing(false);
+        };
+
+        const handlePointerMove = (e) => {
+            if (!isDrawing) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Agregar el nuevo punto al blueprint
+            const updatedBlueprint = {
+                ...selectedBlueprint,
+                points: [...selectedBlueprint.points, { x, y }]
+            };
+
+            setSelectedBlueprint(updatedBlueprint);
+        };
+
+        // Agregar event listeners
+        canvas.addEventListener('pointerdown', handlePointerDown);
+        canvas.addEventListener('pointerup', handlePointerUp);
+        canvas.addEventListener('pointerout', handlePointerUp); // Para cuando el puntero sale del canvas
+        canvas.addEventListener('pointermove', handlePointerMove);
+
+        // Limpieza al desmontar el componente
+        return () => {
+            canvas.removeEventListener('pointerdown', handlePointerDown);
+            canvas.removeEventListener('pointerup', handlePointerUp);
+            canvas.removeEventListener('pointerout', handlePointerUp);
+            canvas.removeEventListener('pointermove', handlePointerMove);
+        };
+    }, [selectedBlueprint, isDrawing, setSelectedBlueprint]);
 
     return (
         <div>
             <h3>
                 Current blueprint: <span id="current-blueprint">
-          {selectedBlueprint ? selectedBlueprint.name : '----'}
-        </span>
+                    {selectedBlueprint ? selectedBlueprint.name : '----'}
+                </span>
             </h3>
             <div className="blueprint-box">
-                <canvas id="blueprint-canvas" width="600" height="600"></canvas>
+                <canvas
+                    ref={canvasRef}
+                    id="blueprint-canvas"
+                    width="600"
+                    height="600"
+                    style={{ touchAction: 'none' }} // Importante para dispositivos táctiles
+                ></canvas>
             </div>
         </div>
     );
@@ -49,10 +126,11 @@ Canvas.propTypes = {
         points: PropTypes.arrayOf(
             PropTypes.shape({
                 x: PropTypes.number.isRequired,
-                y: PropTypes.number.isRequired,
+                y: PropTypes.number.isRequired
             })
-        ).isRequired,
+        ).isRequired
     }),
+    setSelectedBlueprint: PropTypes.func.isRequired
 };
 
 export default Canvas;

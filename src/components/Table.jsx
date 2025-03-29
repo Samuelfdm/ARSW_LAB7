@@ -14,7 +14,7 @@ function Table({ blueprints, setSelectedBlueprint }) {
                 </thead>
                 <tbody>
                 {blueprints.map((blueprint) => (
-                    <tr key={blueprint.name}>
+                    <tr key={`${blueprint.author}-${blueprint.name}`}>
                         <td>{blueprint.name}</td>
                         <td>{blueprint.points.length}</td>
                         <td>
@@ -37,6 +37,7 @@ function Table({ blueprints, setSelectedBlueprint }) {
 Table.propTypes = {
     blueprints: PropTypes.arrayOf(
         PropTypes.shape({
+            author: PropTypes.string.isRequired,
             name: PropTypes.string.isRequired,
             points: PropTypes.arrayOf(
                 PropTypes.shape({
@@ -50,5 +51,3 @@ Table.propTypes = {
 };
 
 export default Table;
-  
-
