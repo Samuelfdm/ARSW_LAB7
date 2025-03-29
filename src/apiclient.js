@@ -54,6 +54,21 @@ const apiclient = {
                 console.error('Error creating blueprint:', error);
                 callback(null);
             });
+    },
+
+    deleteBlueprint: (author, name, callback) => {
+        fetch(`http://localhost:8080/blueprints/${author}/${name}`, {
+            method: 'DELETE',
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Error al eliminar');
+                return response.json();
+            })
+            .then((data) => callback(data))
+            .catch((error) => {
+                console.error('Error deleting blueprint:', error);
+                callback(null);
+            });
     }
 };
 

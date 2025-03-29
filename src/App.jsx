@@ -135,6 +135,45 @@ function App() {
         }
     };
 
+    const handleDeleteBlueprint = async () => {
+        if (!selectedBlueprint || !window.confirm('¿Estás seguro de eliminar este blueprint?')) {
+            return;
+        }
+
+        try {
+            // 1. Eliminar el blueprint (DELETE)
+            await new Promise((resolve) => {
+                apiclient.deleteBlueprint(
+                    selectedBlueprint.author,
+                    selectedBlueprint.name,
+                    (deletedBp) => {
+                        console.log("Blueprint eliminado:", deletedBp);
+                        resolve(deletedBp);
+                    }
+                );
+            });
+
+            // 2. Limpiar el canvas
+            setSelectedBlueprint(null);
+            setIsNewBlueprint(false);
+
+            // 3. Actualizar la lista (GET)
+            await new Promise((resolve) => {
+                apiclient.getAllBlueprints((allBlueprints) => {
+                    const authorBlueprints = allBlueprints.filter(bp => bp.author === author);
+                    setBlueprints(authorBlueprints);
+                    calculateTotalPoints(authorBlueprints);
+                    resolve();
+                });
+            });
+
+            alert('Blueprint eliminado exitosamente!');
+        } catch (error) {
+            console.error('Error al eliminar:', error);
+            alert('Error al eliminar el blueprint');
+        }
+    };
+
     return (
         <div className="container mt-4">
             <Titulo />
@@ -156,6 +195,13 @@ function App() {
                             disabled={!selectedBlueprint}
                         >
                             {isNewBlueprint ? "Save" : "Update"}
+                        </button>
+                        <button
+                            className="btn btn-danger"
+                            onClick={handleDeleteBlueprint}
+                            disabled={!selectedBlueprint}
+                        >
+                            Delete
                         </button>
                     </div>
 
